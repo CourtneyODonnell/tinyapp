@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/CourtneyODonnell/tinyapp/issues"
   },
-  "homepage": "https://github.com/CourtneyODonnell/tinyapp#readme"
+  "homepage": "https://github.com/CourtneyODonnell/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
