@@ -1,12 +1,13 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
-
 const bodyParser = require("body-parser");
+
 const { request } = require("express");
-app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
+app.use(bodyParser.urlencoded({extended: true}));
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
