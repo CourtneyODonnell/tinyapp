@@ -13,7 +13,6 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-        //Add a form to the urls_show template that submits an updated long URL
         <form class="form-inline" action="/urls/<%= shortURL %>" method="POST">
         <div class="form-group mb-2">
           <label for="longURL">Edit the long URL:</label>
