@@ -88,3 +88,10 @@ app.get("/u/:shortURL", (req, res) => {
     res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
   }
 });
+
+//Add a POST route that removes a URL resource: POST /urls/:shortURL/delete
+app.post('/urls/:shortURL/delete', (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+  //redirects to main url page
+});
