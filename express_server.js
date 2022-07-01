@@ -10,19 +10,18 @@ const urlDatabase = {
 };
 
 //Generate a Random ShortURL
-const generateRandomString = function() {
+const generateRandomString = function(length) {
   //variable for characters
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   //variable to create random string
-  let randomString = '';
-  //conditional if length < 6
-  if (randomString.length < 6) {
+  let result = '';
+  let charactersLength = characters.length;
+  //for loop
+  for (let i = 0; i < length; i++) {
     //original empty string + random characters from characters with math floor to produce whole integers
-    randomString += characters[Math.floor(Math.random() * characters.length)];
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-
-  return randomString;
-  
+  return result;
 };
 
 //getting ready for post requests by adding body parser
@@ -69,7 +68,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   //console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
-  const shortURL = generateRandomString(); //variable for shortURL calling generateRandomString function
+  const shortURL = generateRandomString(6); //variable for shortURL calling generateRandomString function
   urlDatabase[shortURL] = req.body.longURL;
   //add url to database
   res.redirect(`/urls/${shortURL}`);
