@@ -63,7 +63,7 @@ app.get("/hello", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies['username'] };
+  let templateVars = { urls: urlDatabase, username: req.cookies['username'] };
   res.render("urls_index", templateVars);
 });
 
@@ -110,5 +110,11 @@ app.post('/urls/:shortURL', (req, res) => {
 //login
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
-  res.redirect('urls');
+  res.redirect('/urls');
+});
+
+//logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
 });
