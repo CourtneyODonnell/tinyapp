@@ -37,7 +37,7 @@ app.get("/urls/new", (req, res) => {
 
 //add new route
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };  res.render("urls_show", templateVars);
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render('urls_show', templateVars);
   //adding shorturl route
 });
@@ -58,6 +58,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//urls_index
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -75,7 +76,16 @@ app.post("/urls", (req, res) => {
   //redirect to /urls/${shortURL}
 });
 
+
+//redirect short URLs
 app.get("/u/:shortURL", (req, res) => {
-  // const longURL = ...
-  res.redirect(longURL);
+  const longURL = urlDatabase[req.params.shortURL];
+  //if longURL is truthy, redirect to
+  if (longURL) {
+    res.redirect(urlDatabase[req.params.shortURL]);
+  } else {
+    //redirect to 404 error
+    res.statusCode = 404;
+    res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
+  }
 });
