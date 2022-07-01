@@ -63,10 +63,16 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//POST
 //define the route that will match this POST request and handle it
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  //console.log(req.body);  // Log the POST request body to the console
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString(); //variable for shortURL calling generateRandomString function
+  urlDatabase[shortURL] = req.body.longURL;
+  //add url to database
+  res.redirect(`/urls/${shortURL}`);
+  //redirect to /urls/${shortURL}
 });
 
 app.get("/u/:shortURL", (req, res) => {
