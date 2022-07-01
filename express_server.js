@@ -9,7 +9,23 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-//getting ready for post requests
+//Generate a Random ShortURL
+const generateRandomString = function() {
+  //variable for characters
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  //variable to create random string
+  let randomString = '';
+  //conditional if length < 6
+  if (randomString.length < 6) {
+    //original empty string + random characters from characters with math floor to produce whole integers
+    randomString += characters[Math.floor(Math.random() * characters.length)];
+  }
+
+  return randomString;
+  
+};
+
+//getting ready for post requests by adding body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -19,9 +35,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//add new route 
+//add new route
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };  res.render("urls_show", templateVars);
+  res.render('urls_show', templateVars);
+  //adding shorturl route
 });
 
 app.get("/", (req, res) => {
@@ -49,4 +67,9 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  // const longURL = ...
+  res.redirect(longURL);
 });
