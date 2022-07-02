@@ -35,7 +35,7 @@ app.use(cookieParser());
 //create user object
 const users = {};
 
-//email already registered
+//email already registered helper function
 const searchForEmail = (email) => {
   //for in loop to scan object
   for (const user in users) {
@@ -53,13 +53,13 @@ const searchForEmail = (email) => {
 
 //add GET route to show the form
 app.get("/urls/new", (req, res) => {
-  let templateVars = {username: req.cookies['username']};
+  let templateVars = {user: users[req.cookies['user_id']]};
   res.render("urls_new", templateVars);
 });
 
 //add new route
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies['username']};
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies['user_id']] };
   res.render('urls_show', templateVars);
   //adding shorturl route
 });
@@ -82,7 +82,7 @@ app.get("/hello", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies['username'] };
+  let templateVars = { urls: urlDatabase, user: users [req.cookies['username']] };
   res.render("urls_index", templateVars);
 });
 
@@ -140,7 +140,7 @@ app.post('/logout', (req, res) => {
 
 //registration
 app.get('/register', (req, res) => {
-  let templateVars = {username: req.cookies['username']};
+  let templateVars = {user: users[req.cookies['user_id']]};
   res.render('urls_registration', templateVars);
 });
 
