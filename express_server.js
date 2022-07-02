@@ -167,3 +167,9 @@ app.post('/register', (req, res) => {
     res.send('<h1>400 Bad Request<br>Please fill out all required fields.</h1>');
   }
 });
+
+//LOGIN
+app.get('/login', (req, res) => {
+  let templateVars = {user: users[req.cookies['user_id']]};
+  res.render('urls_login', templateVars);
+});
