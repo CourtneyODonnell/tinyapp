@@ -131,6 +131,7 @@ app.post('/urls/:shortURL', (req, res) => {
 // });
 
 //logout
+//modify to clear correct cookie
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/urls');
