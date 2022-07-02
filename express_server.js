@@ -175,7 +175,6 @@ app.get('/login', (req, res) => {
 
 //login handler POST
 app.post('/login', (req, res) => {
-  //create variable thisUser
   const user = searchForEmail(req.body.email, users);
   if (user) {
     if (req.body.password === user.password) {
