@@ -36,18 +36,16 @@ app.use(cookieParser());
 const users = {};
 
 //email already registered helper function
-const searchForEmail = (email) => {
+const searchForEmail = (email, users) => {
   //for in loop to scan object
   for (const user in users) {
     //if input email is already registered in database, then...
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
   }
-  return false;
+  return undefined;
 };
-
-
 
 
 
@@ -82,7 +80,7 @@ app.get("/hello", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, user: users [req.cookies['username']] };
+  let templateVars = { urls: urlDatabase, user: users [req.cookies['user_id']] };
   res.render("urls_index", templateVars);
 });
 
@@ -126,15 +124,15 @@ app.post('/urls/:shortURL', (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//login
-app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
-});
+// //login BUTTON from beginning
+// app.post('/login', (req, res) => {
+//   res.cookie('user_id', req.body.user_id);
+//   res.redirect('/urls');
+// });
 
 //logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -160,16 +158,34 @@ app.post('/register', (req, res) => {
       res.redirect('/urls');
     } else {
       res.statusCode = 400;
-      res.send('<h1>400 Bad Request<br>Input email address is already registered.</h1>');
+      res.send('<h3>400 Bad Request<br>Input email address is already registered.</h3>');
     }
   } else {
     res.statusCode = 400;
-    res.send('<h1>400 Bad Request<br>Please fill out all required fields.</h1>');
+    res.send('<h3>400 Bad Request<br>Please fill out all required fields.</h3>');
   }
 });
 
-//LOGIN
+//LOGIN get
 app.get('/login', (req, res) => {
   let templateVars = {user: users[req.cookies['user_id']]};
   res.render('urls_login', templateVars);
+});
+
+//login handler POST
+app.post('/login', (req, res) => {
+  //create variable thisUser
+  const user = searchForEmail(req.body.email, users);
+  if (user) {
+    if (req.body.password === user.password) {
+      res.cookie('user_id', user.userID);
+      res.redirect('/urls');
+    } else {
+      res.statusCode = 403;
+      res.send('<h3>403: Forbidden<br>Password does not match</h3>');
+    }
+  } else {
+    res.statusCode = 403;
+    res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
+  }
 });
