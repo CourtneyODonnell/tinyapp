@@ -32,6 +32,25 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
+//create user object
+const users = {};
+
+//email already registered
+const searchForEmail = (email) => {
+  //for in loop to scan object
+  for (const user in users) {
+    //if input email is already registered in database, then...
+    if (users[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+};
+
+
+
+
+
 //add GET route to show the form
 app.get("/urls/new", (req, res) => {
   let templateVars = {username: req.cookies['username']};
@@ -117,4 +136,34 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
+});
+
+//registration
+app.get('/register', (req, res) => {
+  let templateVars = {username: req.cookies['username']};
+  res.render('urls_registration', templateVars);
+});
+
+//registration handler
+app.post('/register', (req, res) => {
+  //if req body email and pw truthy, then, if not in database, then...
+  if (req.body.email && req.body.password) {
+    if (!searchForEmail(req.body.email)) {
+      const userID = generateRandomString(5);
+      users[userID] = {
+        userID,
+        email: req.body.email,
+        password: req.body.password
+      };
+      res.cookie("user_id", userID);
+      console.log(users);
+      res.redirect('/urls');
+    } else {
+      res.statusCode = 400;
+      res.send('<h1>400 Bad Request<br>Input email address is already registered.</h1>');
+    }
+  } else {
+    res.statusCode = 400;
+    res.send('<h1>400 Bad Request<br>Please fill out all required fields.</h1>');
+  }
 });
