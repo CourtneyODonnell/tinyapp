@@ -68,7 +68,7 @@ const searchForEmail = (email) => {
   for (const user in users) {
     //if input email is already registered in database, then...
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
   }
   return false;
@@ -91,11 +91,12 @@ const urlsForUser = (id) => {
 app.get("/urls/new", (req, res) => {
   let templateVars = {user: users[req.session['user_id']]};
   //Modify so that only registered & logged in users can create new tiny URLs.
-  if (templateVars.user) {
-    res.render("urls_new", templateVars);
-  } else {
-    res.redirect('/login', templateVars);
+  console.log(templateVars.user);
+  if (!templateVars.user) {
+    res.status(400).send("This feature is only accessible when logged in");
+    return;
   }
+  return res.render('urls_new', templateVars);
 });
 
 //add new route
@@ -132,7 +133,6 @@ app.get("/urls", (req, res) => {
     user: users[req.session['user_id']],
     urls: urlsForUser(req.session['user_id'])
   };
-  res.render("urls_index", templateVars);
   if (templateVars.user) {
     res.render("urls_index", templateVars);
   } else {
@@ -217,14 +217,14 @@ app.post('/register', (req, res) => {
       };
       req.session.user_id = userID;
       console.log(users);
-      res.redirect('/urls');
+      return res.redirect('/urls');
     } else {
       res.statusCode = 400;
-      res.send('<h3>400 Bad Request<br>Input email address is already registered.</h3>');
+      return res.send('<h3>400 Bad Request<br>Input email address is already registered.</h3>');
     }
   } else {
     res.statusCode = 400;
-    res.send('<h3>400 Bad Request<br>Please fill out all required fields.</h3>');
+    return res.send('<h3>400 Bad Request<br>Please fill out all required fields.</h3>');
   }
 });
 
@@ -237,16 +237,17 @@ app.get('/login', (req, res) => {
 //login handler POST
 app.post('/login', (req, res) => {
   const user = searchForEmail(req.body.email);
+ 
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      req.session('user_id', user.userID);
-      res.redirect('/urls');
+      req.session.user_id = user.userID;
+      return res.redirect('/urls');
     } else {
       res.statusCode = 403;
-      res.send('<h3>403: Forbidden<br>Password does not match</h3>');
+      return res.send('<h3>403: Forbidden<br>Password does not match</h3>');
     }
   } else {
     res.statusCode = 403;
-    res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
+    return res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
   }
 });
