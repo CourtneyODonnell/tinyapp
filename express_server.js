@@ -36,23 +36,28 @@ app.use(cookieParser());
 const users = {};
 
 //email already registered helper function
-const searchForEmail = (email, users) => {
+const searchForEmail = (email) => {
   //for in loop to scan object
   for (const user in users) {
     //if input email is already registered in database, then...
     if (users[user].email === email) {
-      return users[user];
+      return true;
     }
   }
-  return undefined;
+  return false;
 };
 
 
 
 //add GET route to show the form
 app.get("/urls/new", (req, res) => {
-  let templateVars = {user: users[req.cookies['user_id']]};
-  res.render("urls_new", templateVars);
+  //Modify so that only registered & logged in users can create new tiny URLs.
+  if (req.cookies['user_id']) {
+    let templateVars = {user: users[req.cookies['user_id']]};
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login');
+  }
 });
 
 //add new route
