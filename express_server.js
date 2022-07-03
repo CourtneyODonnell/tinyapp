@@ -91,7 +91,6 @@ const urlsForUser = (id) => {
 app.get("/urls/new", (req, res) => {
   let templateVars = {user: users[req.session['user_id']]};
   //Modify so that only registered & logged in users can create new tiny URLs.
-  console.log(templateVars.user);
   if (!templateVars.user) {
     res.status(400).send("This feature is only accessible when logged in");
     return;
