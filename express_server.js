@@ -37,6 +37,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 //cookie parser require
 const cookieParser = require("cookie-parser");
+const { request } = require("express");
 app.use(cookieParser());
 
 //create user object
@@ -58,20 +59,29 @@ const searchForEmail = (email) => {
 
 //add GET route to show the form
 app.get("/urls/new", (req, res) => {
+  let templateVars = {user: users[req.cookies['user_id']]};
   //Modify so that only registered & logged in users can create new tiny URLs.
-  if (req.cookies['user_id']) {
-    let templateVars = {user: users[req.cookies['user_id']]};
+  if (templateVars.user) {
     res.render("urls_new", templateVars);
   } else {
-    res.redirect('/login');
+    res.redirect('/login', templateVars);
   }
 });
 
 //add new route
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']] };
-  res.render('urls_show', templateVars);
-  //adding shorturl route
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: users[req.cookies['user_id']]
+  };
+  if (!templateVars.user) {
+    res.status(400).send("This feature is only accessible when logged in");
+  } else if (req.cookies['user_id'] === urlDatabase[templateVars.shortURL].userID) {
+    res.render('urls_show', templateVars);
+  } else {
+    res.status(400).send("This URL is not associated with your account.");
+  }
 });
 
 app.get("/", (req, res) => {
@@ -92,17 +102,28 @@ app.get("/hello", (req, res) => {
 
 //urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, user: users [req.cookies['user_id']] };
+  let templateVars = {
+    user: users[req.cookies['user_id']],
+    urls: urlsForUser(req.cookies['user_id'])
+  };
   res.render("urls_index", templateVars);
+  if (templateVars.user) {
+    res.render("urls_index", templateVars);
+  } else {
+    res.status(400).send("Please log in to access this feature.");
+  }
 });
 
 //POST
 //define the route that will match this POST request and handle it
 app.post("/urls", (req, res) => {
+  //should not display URLs unless the user is logged in. It should instead display a message or prompt suggesting that they log in or register first
+  const userID = req.cookies['user_id'];
+  const longURL = req.body.longURL;
   const shortURL = generateRandomString(6); //variable for shortURL calling generateRandomString function
   urlDatabase[shortURL] = {
-    longURL: req.body.longURL,
-    userID: req.cookies['user_id']
+    longURL,
+    userID
   };
   res.redirect(`/urls/${shortURL}`);
 });
@@ -123,16 +144,26 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Add a POST route that removes a URL resource: POST /urls/:shortURL/delete
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
-  //redirects to main url page
+  const shortURL = req.params.shortURL;
+  if (req.cookies['user_id'] === urlDatabase[shortURL].userID) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+    //redirects to main url page
+  } else {
+    res.status(400).send("You do not have permission to delete this URL");
+  }
 });
 
 //update longURL in database
 app.post('/urls/:shortURL', (req, res) => {
+  const longURL = req.body.longURL;
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL].longURL = req.body.updatedURL;
-  res.redirect(`/urls/${shortURL}`);
+  if (req.cookies['user_id'] === urlDatabase[shortURL].userID) {
+    urlDatabase[shortURL].longURL = longURL;
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(400).send("You do not have permission to edit this URL");
+  }
 });
 
 // //login BUTTON from beginning
@@ -200,3 +231,14 @@ app.post('/login', (req, res) => {
     res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
   }
 });
+
+const urlsForUser = (id) => {
+  //returns URLs where userID is equal to the id of the currently logged-in user
+  let result = {};
+  for (let URLid of Object.keys(urlDatabase)) {
+    if (urlDatabase[URLid].userID === id) {
+      result[URLid] = urlDatabase[URLid];
+    }
+  }
+  return result;
+};
