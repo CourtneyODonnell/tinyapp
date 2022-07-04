@@ -3,6 +3,7 @@
 const cookieSession = require('cookie-session');
 //bcryptjs
 const bcrypt = require('bcryptjs');
+const getUserByEmail = require('./helpers');
 
 //CONSTANTS
 const express = require("express");
@@ -23,8 +24,6 @@ app.use(cookieSession({
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-
 
 
 app.set("view engine", "ejs");
@@ -62,17 +61,17 @@ const generateRandomString = function(length) {
   return result;
 };
 
-//email already registered helper function
-const searchForEmail = (email) => {
-  //for in loop to scan object
-  for (const user in users) {
-    //if input email is already registered in database, then...
-    if (users[user].email === email) {
-      return users[user];
-    }
-  }
-  return false;
-};
+// //email already registered helper function
+// const searchForEmail = (email) => {
+//   //for in loop to scan object
+//   for (const user in users) {
+//     //if input email is already registered in database, then...
+//     if (users[user].email === email) {
+//       return users[user];
+//     }
+//   }
+//   return false;
+// };
 
 const urlsForUser = (id) => {
   //returns URLs where userID is equal to the id of the currently logged-in user
@@ -207,7 +206,8 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   //if req body email and pw truthy, then, if not in database, then...
   if (req.body.email && req.body.password) {
-    if (!searchForEmail(req.body.email)) {
+    //if (!searchForEmail(req.body.email)) {
+    if (!getUserByEmail(req.body.email, users)) {
       const userID = generateRandomString(5);
       users[userID] = {
         userID,
@@ -235,7 +235,8 @@ app.get('/login', (req, res) => {
 
 //login handler POST
 app.post('/login', (req, res) => {
-  const user = searchForEmail(req.body.email);
+  // const user = searchForEmail(req.body.email);
+  const user = getUserByEmail(req.body.email, users);
  
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
