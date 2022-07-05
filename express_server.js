@@ -8,9 +8,6 @@ const PORT = 8080;
 const users = {};
 
 app.set("view engine", "ejs");
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
@@ -73,17 +70,21 @@ app.get("/urls/:shortURL", (req, res) => {
     user: users[req.session['user_id']]
   };
   if (!templateVars.user) {
-    res.status(400).send("This feature is only accessible when logged in");
+    return res.status(400).send("This feature is only accessible when logged in");
   } else if (req.session['user_id'] === urlDatabase[templateVars.shortURL].userID) {
-    res.render('urls_show', templateVars);
+    return res.render('urls_show', templateVars);
   } else {
-    res.status(400).send("This URL is not associated with your account.");
+    return res.status(400).send("This URL is not associated with your account.");
   }
 });
 
 //main page greeting
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session.userID) {
+    return res.redirect('urls');
+  } else {
+    return res.redirect('/login');
+  }
 });
 
 //json of urls
@@ -91,10 +92,6 @@ app.get("/urls.json", (req, res) => {
   res.send(users);
 });
 
-//hello world page
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 //urls_index
 app.get("/urls", (req, res) => {
@@ -103,9 +100,9 @@ app.get("/urls", (req, res) => {
     urls: urlsForUser(req.session['user_id'])
   };
   if (templateVars.user) {
-    res.render("urls_index", templateVars);
+    return res.render("urls_index", templateVars);
   } else {
-    res.status(400).send("Please log in at http://localhost:8080/login to access this feature.");
+    return res.status(400).send("Please log in at http://localhost:8080/login to access this feature.");
   }
 });
 
@@ -118,20 +115,21 @@ app.post("/urls", (req, res) => {
     longURL,
     userID
   };
+  console.log(`DATABASE ${urlDatabase[shortURL]}`);
   res.redirect(`/urls/${shortURL}`);
 });
-
 
 //:shortURL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   if (longURL) {
-    res.redirect(urlDatabase[req.params.shortURL].longURL);
+    return res.redirect(urlDatabase[req.params.shortURL].longURL);
   } else {
     res.statusCode = 404;
-    res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
+    return res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
   }
 });
+
 
 //delete shortURL
 app.post('/urls/:shortURL/delete', (req, res) => {
@@ -146,6 +144,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //update longURL
 app.post('/urls/:shortURL', (req, res) => {
+  console.log('request body', req.body);
   const longURL = req.body.longURL;
   const shortURL = req.params.shortURL;
   if (req.session['user_id'] === urlDatabase[shortURL].userID) {
@@ -213,4 +212,8 @@ app.post('/login', (req, res) => {
     res.statusCode = 403;
     return res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
