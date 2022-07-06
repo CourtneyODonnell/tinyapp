@@ -1,8 +1,11 @@
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const getUserByEmail = require('./helpers');
+const urlsForUser = require('./helpers');
+const generateRandomString = require('./helpers');
 const express = require("express");
 const bodyParser = require("body-parser");
+
 const app = express();
 const PORT = 8080;
 const users = {};
@@ -27,28 +30,6 @@ const urlDatabase = {
     longURL: "https://www.google.ca",
     userID: "aJ48lW"
   }
-};
-
-//function to generate random characters based on given length parameter
-const generateRandomString = function(length) {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = '';
-  let charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-//returns URLs where userID is equal to the id of the currently logged-in user
-const urlsForUser = (id) => {
-  let result = {};
-  for (let URLid of Object.keys(urlDatabase)) {
-    if (urlDatabase[URLid].userID === id) {
-      result[URLid] = urlDatabase[URLid];
-    }
-  }
-  return result;
 };
 
 //ROUTING
@@ -78,6 +59,11 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
+/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
+//GET /u/:id if URL for the given ID does not exist: (Minor) returns HTML with a relevant error message
+
+/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
+//1- Get "/" if user is not logged in: (Minor) redirect to /login
 //main page greeting
 app.get("/", (req, res) => {
   if (req.session.userID) {
@@ -97,7 +83,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   let templateVars = {
     user: users[req.session['user_id']],
-    urls: urlsForUser(req.session['user_id'])
+    urls: urlsForUser(req.session['user_id'], urlDatabase)
   };
   if (templateVars.user) {
     return res.render("urls_index", templateVars);
@@ -161,6 +147,8 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 });
 
+//*** TO FIX FUNCTIONAL REQUIREMENTS *** */
+//GET /register if user is logged in: (Minor) redirects to /urls
 //GET register
 app.get('/register', (req, res) => {
   let templateVars = {user: users[req.session['user_id']]};
@@ -177,7 +165,7 @@ app.post('/register', (req, res) => {
         email: req.body.email,
         password: bcrypt.hashSync(req.body.password, 10)
       };
-      req.session.user_id = userID;
+      req.session.userId = userID;
       console.log(users);
       return res.redirect('/urls');
     } else {
@@ -202,7 +190,7 @@ app.post('/login', (req, res) => {
  
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      req.session.user_id = user.userID;
+      req.session.userId = user.userID;
       return res.redirect('/urls');
     } else {
       res.statusCode = 403;
@@ -213,6 +201,9 @@ app.post('/login', (req, res) => {
     return res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
   }
 });
+
+/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
+//GET /urls/:id (Minor) returns HTML with a relevant error message
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
