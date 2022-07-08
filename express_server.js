@@ -73,12 +73,13 @@ app.get("/urls/new", (req, res) => {
 
 //new URL
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {
+  const userID = req.session.user_id;
+  const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session['user_id']]
   };
-  if (!templateVars.user) {
+  if (!userID) {
     return res.status(400).send("This feature is only accessible when logged in");
   } else if (req.session['user_id'] === urlDatabase[templateVars.shortURL].userID) {
     return res.render('urls_show', templateVars);
@@ -119,16 +120,18 @@ app.post("/urls", (req, res) => {
 });
 
 //:shortURL
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  if (longURL) {
-    return res.redirect(urlDatabase[req.params.shortURL].longURL);
-  } else {
-    res.statusCode = 404;
-    return res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
-  }
-});
+//short URL created by user for longer URL
 
+app.get("/u/:shortURL", (req, res) => {
+  const userURLS = urlDatabase[req.params.shortURL];
+  //if userURLS is falsey then return html error code
+  if (!userURLS) {
+    res.send('<h2>404 Not Found<br>This shortURL does not exist!</h2>');
+    return;
+  }
+  //else, redirect to corresponding long URL
+  res.redirect(userURLS.longURL);
+});
 
 //delete shortURL
 app.post('/urls/:shortURL/delete', (req, res) => {
@@ -159,12 +162,6 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
-/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
-//GET /urls/:id (Minor) returns HTML with a relevant error message
-
-/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
-//GET /u/:id if URL for the given ID does not exist: (Minor) returns HTML with a relevant error message
-
 
 //GET register
 app.get('/register', (req, res) => {
