@@ -1,16 +1,20 @@
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const getUserByEmail = require('./helpers');
-const urlsForUser = require('./helpers');
-const generateRandomString = require('./helpers');
-const express = require("express");
+const express = require('express');
 const bodyParser = require("body-parser");
+
+const {
+  getUserByEmail,
+  urlsForUser,
+  generateRandomString,
+  getUserById
+} = require('./helpers');
 
 const app = express();
 const PORT = 8080;
-const users = {};
 
 app.set("view engine", "ejs");
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
@@ -20,7 +24,21 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
+
 //const objects and functions
+const users = {
+  'userRandomID': {
+    id: "userRandomID",
+    email: 'user@example.com',
+    password: 'purple-monkey-dinosaur'
+  },
+  'user2RandomID': {
+    id: 'user2RandomID',
+    email: 'user2@example.com',
+    password: 'dishwasher-funk'
+  }
+};
+
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -33,6 +51,16 @@ const urlDatabase = {
 };
 
 //ROUTING
+
+//main page
+app.get("/", (req, res) => {
+  //if user is not logged in, redirect to /login
+  if (!req.session.user_id) {
+    res.redirect('/login');
+    return;
+  }
+  res.redirect('/urls');
+});
 
 app.get("/urls/new", (req, res) => {
   let templateVars = {user: users[req.session['user_id']]};
@@ -59,29 +87,14 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
-//GET /u/:id if URL for the given ID does not exist: (Minor) returns HTML with a relevant error message
-
-/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
-//1- Get "/" if user is not logged in: (Minor) redirect to /login
-//main page greeting
-app.get("/", (req, res) => {
-  if (req.session.userID) {
-    return res.redirect('urls');
-  } else {
-    return res.redirect('/login');
-  }
-});
-
 //json of urls
 app.get("/urls.json", (req, res) => {
   res.send(users);
 });
 
-
 //urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = {
+  const templateVars = {
     user: users[req.session['user_id']],
     urls: urlsForUser(req.session['user_id'], urlDatabase)
   };
@@ -146,12 +159,26 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
+/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
+//GET /urls/:id (Minor) returns HTML with a relevant error message
 
-//*** TO FIX FUNCTIONAL REQUIREMENTS *** */
-//GET /register if user is logged in: (Minor) redirects to /urls
+/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
+//GET /u/:id if URL for the given ID does not exist: (Minor) returns HTML with a relevant error message
+
+
 //GET register
 app.get('/register', (req, res) => {
-  let templateVars = {user: users[req.session['user_id']]};
+  const registered = false;
+  const templateVars = {
+    user: getUserById(req.session.user_id, users),
+    users,
+    registered
+  };
+  //if user is logged in, redirect to /urls
+  if (req.session.user_id) {
+    res.redirect('/urls');
+    return;
+  }
   res.render('urls_registration', templateVars);
 });
 
@@ -165,7 +192,7 @@ app.post('/register', (req, res) => {
         email: req.body.email,
         password: bcrypt.hashSync(req.body.password, 10)
       };
-      req.session.userId = userID;
+      req.session.user_id = userID;
       console.log(users);
       return res.redirect('/urls');
     } else {
@@ -190,7 +217,7 @@ app.post('/login', (req, res) => {
  
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      req.session.userId = user.userID;
+      req.session.user_id = user.userID;
       return res.redirect('/urls');
     } else {
       res.statusCode = 403;
@@ -201,9 +228,6 @@ app.post('/login', (req, res) => {
     return res.send('<h3>403: Forbidden<br>No user account with this email address found</h3>');
   }
 });
-
-/*** TO FIX - FUNCTIONAL REQUIREMENTS ***/
-//GET /urls/:id (Minor) returns HTML with a relevant error message
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
